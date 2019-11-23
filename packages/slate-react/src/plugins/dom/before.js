@@ -504,7 +504,7 @@ function BeforePlugin() {
     onKeyDown,
     onPaste,
     onSelect,
-    queries: { userActionPerformed },
+    queries: { userActionPerformed, isComposing: () => isComposing },
     commands: { clearUserActionPerformed },
   }
 }

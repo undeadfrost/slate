@@ -106,6 +106,7 @@ class Content extends React.Component {
     nodeRefs: {},
     contentKey: 0,
     nativeSelection: {}, // Native selection object stored to check if `onNativeSelectionChange` has triggered yet
+    isComposing: false,
   }
 
   /**
@@ -223,7 +224,7 @@ class Content extends React.Component {
 
     // COMPAT: In Firefox, there's a but where `getSelection` can return `null`.
     // https://bugzilla.mozilla.org/show_bug.cgi?id=827585 (2018/11/07)
-    if (!native) {
+    if (!native || editor.isComposing()) {
       return
     }
 
@@ -435,6 +436,15 @@ class Content extends React.Component {
       event.type === 'keydown' &&
       (Hotkeys.isUndo(nativeEvent) || Hotkeys.isRedo(nativeEvent))
 
+    if (handler === 'onCompositionStart') {
+      // eslint-disable-next-line no-console
+      this.tmp.isComposing = true
+    }
+
+    if (handler === 'onCompositionEnd') {
+      window.requestAnimationFrame(() => (this.tmp.isComposing = false))
+    }
+
     // Ignore `onBlur`, `onFocus` and `onSelect` events generated
     // programmatically while updating selection.
     if (
@@ -454,7 +464,7 @@ class Content extends React.Component {
     // at the end of a block. The selection ends up to the left of the inserted
     // character instead of to the right. This behavior continues even if
     // you enter more than one character. (2019/01/03)
-    if (!IS_ANDROID && handler === 'onSelect') {
+    if (!IS_ANDROID && handler === 'onSelect' && !this.tmp.isComposing) {
       const { editor } = this.props
       const { value } = editor
       const { selection } = value
